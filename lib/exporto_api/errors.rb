@@ -24,8 +24,4 @@ module ExportoAPI
   class RateLimitError < Error; end
 
   class ServerError < Error; end
-
-  class TimeoutError < Error; end
-
-  class ConnectionError < Error; end
 end

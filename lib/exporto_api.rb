@@ -14,8 +14,6 @@ module ExportoAPI
   autoload :NotFoundError, "exporto_api/errors"
   autoload :RateLimitError, "exporto_api/errors"
   autoload :ServerError, "exporto_api/errors"
-  autoload :TimeoutError, "exporto_api/errors"
-  autoload :ConnectionError, "exporto_api/errors"
   autoload :AuthResource, "exporto_api/resources/auth_resource"
 
   module Objects

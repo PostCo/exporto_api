@@ -161,7 +161,10 @@ RSpec.describe ExportoAPI::Resource do
       stub_request(:get, endpoint("unsafe-error"))
         .to_return(
           status: 500,
-          body: JSON.generate("access_token" => access_token, "authorization" => "Bearer #{access_token}"),
+          body: JSON.generate(
+            "error" => {"access_token" => access_token},
+            "authorization" => "Bearer #{access_token}"
+          ),
           headers: {"Content-Type" => "application/json"}
         )
 
@@ -174,26 +177,26 @@ RSpec.describe ExportoAPI::Resource do
   end
 
   describe "transport failures" do
-    it "maps Faraday timeouts and retains the original cause" do
+    it "maps Faraday timeouts to APIError and retains the original cause" do
       stub_request(:get, endpoint("slow"))
         .to_raise(Faraday::TimeoutError.new("execution expired"))
 
       expect { resource.fetch("slow") }
-        .to raise_error(ExportoAPI::TimeoutError) do |error|
-          expect(error.message).to eq("Request timed out: execution expired")
+        .to raise_error(ExportoAPI::APIError) do |error|
+          expect(error.message).to eq("Network request failed")
           expect(error.status_code).to be_nil
           expect(error.response).to be_nil
           expect(error.cause).to be_a(Faraday::TimeoutError)
         end
     end
 
-    it "maps connection failures and retains the original cause" do
+    it "maps connection failures to APIError and retains the original cause" do
       stub_request(:get, endpoint("unavailable"))
         .to_raise(Faraday::ConnectionFailed.new("socket closed"))
 
       expect { resource.fetch("unavailable") }
-        .to raise_error(ExportoAPI::ConnectionError) do |error|
-          expect(error.message).to eq("Connection failed: socket closed")
+        .to raise_error(ExportoAPI::APIError) do |error|
+          expect(error.message).to eq("Network request failed")
           expect(error.status_code).to be_nil
           expect(error.response).to be_nil
           expect(error.cause).to be_a(Faraday::ConnectionFailed)
@@ -206,7 +209,7 @@ RSpec.describe ExportoAPI::Resource do
 
       expect { resource.fetch("broken") }
         .to raise_error(ExportoAPI::APIError) do |error|
-          expect(error.message).to eq("Network error: unexpected transport failure")
+          expect(error.message).to eq("Network request failed")
           expect(error.cause).to be_a(Faraday::Error)
         end
     end
@@ -220,7 +223,7 @@ RSpec.describe ExportoAPI::Resource do
         resource.create("shipments", body: {"shipmentId" => "return-123"})
       end
 
-      expect(error).to be_a(ExportoAPI::ConnectionError)
+      expect(error).to be_a(ExportoAPI::APIError)
       expect(request).to have_been_requested.once
       expect(output).not_to include(access_token, "Bearer #{access_token}")
     end

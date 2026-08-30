@@ -49,7 +49,9 @@ module ExportoAPI
 
     def extract_error_message(body)
       case body
-      when Hash then body["message"] || body[:message] || body["error"] || body[:error] || "Unknown error"
+      when Hash
+        [body["message"], body[:message], body["error"], body[:error]]
+          .find { |value| value.is_a?(String) } || "Unknown error"
       when String then body
       else "Unknown error"
       end
@@ -81,21 +83,12 @@ module ExportoAPI
     end
 
     def raise_transport_error(error)
-      error_class, prefix = transport_error_mapping(error)
-      wrapped_error = error_class.new(
-        "#{prefix}: #{error.message}",
+      wrapped_error = APIError.new(
+        "Network request failed",
         response: error.response,
         status_code: error.response_status
       )
       raise wrapped_error, cause: error
-    end
-
-    def transport_error_mapping(error)
-      case error
-      when Faraday::TimeoutError then [TimeoutError, "Request timed out"]
-      when Faraday::ConnectionFailed then [ConnectionError, "Connection failed"]
-      else [APIError, "Network error"]
-      end
     end
   end
 end

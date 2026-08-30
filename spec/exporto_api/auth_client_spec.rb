@@ -136,7 +136,9 @@ RSpec.describe ExportoAPI::AuthClient do
 
       error, output = capture_failure { auth_client.token }
 
-      expect(error).to be_a(ExportoAPI::TimeoutError)
+      expect(error).to be_a(ExportoAPI::APIError)
+      expect(error.message).to eq("Network request failed")
+      expect(error.cause).to be_a(Faraday::TimeoutError)
       expect(request).to have_been_requested.once
       expect(output).not_to include(username, password, Faraday::Utils.basic_header_from(username, password))
     end
