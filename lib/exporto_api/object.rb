@@ -8,8 +8,8 @@ module ExportoAPI
     attr_reader :original_response
 
     def initialize(attributes)
-      @original_response = immutable_copy(attributes)
-      super(to_ostruct(@original_response))
+      @original_response = deep_freeze(attributes)
+      super(to_ostruct(attributes))
     end
 
     def to_hash
@@ -38,25 +38,12 @@ module ExportoAPI
       end
     end
 
-    def immutable_copy(value)
-      copy = case value
-      when Hash
-        value.each_pair.with_object({}) do |(key, entry), result|
-          result[immutable_copy(key)] = immutable_copy(entry)
-        end
-      when Array
-        value.map { |entry| immutable_copy(entry) }
-      else
-        duplicate(value)
+    def deep_freeze(object)
+      case object
+      when Hash then object.transform_values { |value| deep_freeze(value) }.freeze
+      when Array then object.map { |item| deep_freeze(item) }.freeze
+      else object.respond_to?(:freeze) ? object.freeze : object
       end
-
-      copy.freeze
-    end
-
-    def duplicate(value)
-      value.dup
-    rescue TypeError
-      value
     end
 
     def ostruct_to_hash(object)

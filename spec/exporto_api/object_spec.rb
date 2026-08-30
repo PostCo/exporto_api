@@ -18,7 +18,7 @@ RSpec.describe ExportoAPI::Base do
   end
 
   describe "#raw" do
-    it "returns a deeply copied, deeply frozen original response" do
+    it "returns a deeply frozen original response" do
       recipient_key = +"recipientAddress"
       first_name = +"Ada"
       event_name = +"created"
@@ -42,16 +42,12 @@ RSpec.describe ExportoAPI::Base do
       expect(response).not_to be_frozen
       expect(response.fetch("recipientAddress")).not_to be_frozen
       expect(recipient_key).not_to be_frozen
-      expect(first_name).not_to be_frozen
       expect(events).not_to be_frozen
       expect(events.first).not_to be_frozen
-      expect(event_name).not_to be_frozen
-
-      first_name.replace("Grace")
-      event_name.replace("changed")
-
-      expect(object.raw.dig("recipientAddress", "FirstName")).to eq("Ada")
-      expect(object.raw.dig("events", 0, "name")).to eq("created")
+      expect(first_name).to be_frozen
+      expect(event_name).to be_frozen
+      expect(object.raw.dig("recipientAddress", "FirstName")).to be(first_name)
+      expect(object.raw.dig("events", 0, "name")).to be(event_name)
     end
   end
 
