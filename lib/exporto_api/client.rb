@@ -7,9 +7,10 @@ module ExportoAPI
     LIVE_BASE_URL = "https://api.exporto.de/v1/"
     TEST_BASE_URL = "https://staging.api.exporto.de/v1/"
 
-    attr_reader :adapter
+    attr_reader :access_token, :adapter
 
-    def initialize(sandbox: false, adapter: Faraday.default_adapter)
+    def initialize(access_token:, sandbox: false, adapter: Faraday.default_adapter)
+      @access_token = access_token
       @sandbox = sandbox
       @adapter = adapter
     end
@@ -17,6 +18,8 @@ module ExportoAPI
     def connection
       @connection ||= Faraday.new do |connection|
         connection.url_prefix = sandbox? ? TEST_BASE_URL : LIVE_BASE_URL
+        connection.headers["Authorization"] = "Bearer #{access_token}"
+        connection.headers["Accept"] = "application/json"
         connection.request :json
         connection.response :json, content_type: /\bjson/
         connection.adapter adapter
