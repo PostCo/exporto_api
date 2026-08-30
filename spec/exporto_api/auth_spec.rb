@@ -3,61 +3,23 @@
 require "json"
 require "stringio"
 
-RSpec.describe ExportoAPI::AuthClient do
-  subject(:auth_client) do
-    described_class.new(
-      username: username,
-      password: password,
-      sandbox: sandbox
-    )
-  end
-
+RSpec.describe ExportoAPI::Auth do
   let(:username) { "exporto-user" }
   let(:password) { "exporto-password" }
   let(:sandbox) { false }
 
-  describe "#connection" do
-    it "uses the live base URL by default" do
-      expect(auth_client.connection.url_prefix.to_s).to eq(ExportoAPI::Client::LIVE_BASE_URL)
-    end
-
-    context "when sandbox mode is enabled" do
-      let(:sandbox) { true }
-
-      it "uses the same staging base URL as the normal client" do
-        client = ExportoAPI::Client.new(access_token: "token", sandbox: true)
-
-        expect(auth_client.connection.url_prefix).to eq(client.connection.url_prefix)
-      end
-    end
-
-    it "builds the connection lazily" do
-      expect(auth_client.instance_variable_defined?(:@connection)).to be(false)
-
-      auth_client.connection
-
-      expect(auth_client.instance_variable_defined?(:@connection)).to be(true)
-    end
-
-    it "memoizes the connection" do
-      expect(auth_client.connection).to be(auth_client.connection)
-    end
-
-    it "does not configure logging or retry middleware" do
-      middleware = auth_client.connection.builder.handlers.map { |handler| handler.klass.name }
-
-      expect(middleware).not_to include("Faraday::Response::Logger", "Faraday::Retry::Middleware")
-    end
-  end
-
-  describe "#token" do
+  describe ".fetch_token" do
     let(:token_response) do
       {
         "access_token" => "returned-access-token",
         "token_type" => "bearer",
         "expires_in" => 1800,
-        "scope" => "label:create shipment:read"
+        "scope" => "order:write label:create"
       }
+    end
+
+    it "does not expose a public constructor" do
+      expect(described_class).not_to respond_to(:new)
     end
 
     it "uses Basic authentication and always sends the client credentials grant" do
@@ -69,7 +31,18 @@ RSpec.describe ExportoAPI::AuthClient do
         headers: {"Content-Type" => "application/json"}
       )
 
-      auth_client.token
+      fetch_token
+
+      expect(request).to have_been_requested.once
+    end
+
+    it "uses the staging URL when sandbox mode is enabled" do
+      request = stub_token_request(
+        body: {"grant_type" => "client_credentials"},
+        base_url: ExportoAPI::Client::TEST_BASE_URL
+      ).to_return(status: 200, body: JSON.generate(token_response))
+
+      fetch_token(sandbox: true)
 
       expect(request).to have_been_requested.once
     end
@@ -79,7 +52,7 @@ RSpec.describe ExportoAPI::AuthClient do
         body: {"grant_type" => "client_credentials"}
       ).to_return(status: 200, body: JSON.generate(token_response))
 
-      auth_client.token
+      fetch_token
 
       expect(request).to have_been_requested.once
     end
@@ -93,7 +66,7 @@ RSpec.describe ExportoAPI::AuthClient do
         }
       ).to_return(status: 200, body: JSON.generate(token_response.merge("scope" => scope)))
 
-      auth_client.token(scope: scope)
+      fetch_token(scope: scope)
 
       expect(request).to have_been_requested.once
     end
@@ -102,13 +75,13 @@ RSpec.describe ExportoAPI::AuthClient do
       stub_token_request(body: {"grant_type" => "client_credentials"})
         .to_return(status: 200, body: JSON.generate(token_response))
 
-      token = auth_client.token
+      token = fetch_token
 
       expect(token).to be_a(ExportoAPI::Objects::TokenResponse)
       expect(token.access_token).to eq("returned-access-token")
       expect(token.token_type).to eq("bearer")
       expect(token.expires_in).to eq(1800)
-      expect(token.scope).to eq("label:create shipment:read")
+      expect(token.scope).to eq("order:write label:create")
       expect(token.raw).to eq(token_response)
     end
 
@@ -123,7 +96,7 @@ RSpec.describe ExportoAPI::AuthClient do
           headers: {"Content-Type" => "application/json"}
         )
 
-      expect { auth_client.token }
+      expect { fetch_token }
         .to raise_error(ExportoAPI::AuthenticationError) do |error|
           expect(error.status_code).to eq(401)
           expect(error.request_id).to eq("token-request-id")
@@ -134,28 +107,36 @@ RSpec.describe ExportoAPI::AuthClient do
       request = stub_token_request(body: {"grant_type" => "client_credentials"})
         .to_raise(Faraday::TimeoutError.new("execution expired"))
 
-      error, output = capture_failure { auth_client.token }
+      error, output = capture_failure { fetch_token }
 
       expect(error).to be_a(ExportoAPI::TimeoutError)
       expect(request).to have_been_requested.once
       expect(output).not_to include(username, password, Faraday::Utils.basic_header_from(username, password))
     end
-  end
 
-  describe "adapter injection" do
-    it "uses Faraday's default adapter when none is supplied" do
-      expect(auth_client.adapter).to eq(Faraday.default_adapter)
-    end
+    it "uses an injected adapter" do
+      adapter = Class.new(Faraday::Adapter) do
+        def call(_environment)
+          raise "injected adapter used"
+        end
+      end
 
-    it "configures an injected adapter" do
-      client = described_class.new(username: username, password: password, adapter: :test)
-
-      expect(client.connection.builder.adapter.klass).to eq(Faraday::Adapter::Test)
+      expect { fetch_token(adapter: adapter) }.to raise_error("injected adapter used")
     end
   end
 
-  def stub_token_request(body:)
-    stub_request(:post, "#{ExportoAPI::Client::LIVE_BASE_URL}auth/token")
+  def fetch_token(scope: nil, sandbox: self.sandbox, adapter: Faraday.default_adapter)
+    described_class.fetch_token(
+      username: username,
+      password: password,
+      scope: scope,
+      sandbox: sandbox,
+      adapter: adapter
+    )
+  end
+
+  def stub_token_request(body:, base_url: ExportoAPI::Client::LIVE_BASE_URL)
+    stub_request(:post, "#{base_url}auth/token")
       .with(
         basic_auth: [username, password],
         body: JSON.generate(body),
