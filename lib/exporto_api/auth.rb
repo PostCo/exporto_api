@@ -6,7 +6,7 @@ module ExportoAPI
   class Auth < Resource
     class << self
       def fetch_token(username:, password:, scope: nil, sandbox: false, adapter: Faraday.default_adapter)
-        new(username: username, password: password, sandbox: sandbox, adapter: adapter).fetch_token(scope: scope)
+        new(username: username, password: password, sandbox: sandbox, adapter: adapter).call(scope: scope)
       end
 
       private :new
@@ -19,7 +19,7 @@ module ExportoAPI
       @adapter = adapter
     end
 
-    def fetch_token(scope: nil)
+    def call(scope: nil)
       body = {"grant_type" => "client_credentials"}
       body["scope"] = scope unless scope.nil?
 
