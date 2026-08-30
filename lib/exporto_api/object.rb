@@ -1,60 +1,41 @@
 # frozen_string_literal: true
 
-require "active_support/inflector/methods"
+require "ostruct"
+require "active_support/core_ext/string/inflections"
 
 module ExportoAPI
-  class Object
-    attr_reader :raw
-    alias original_response raw
+  class Base < OpenStruct
+    attr_reader :original_response
 
-    def initialize(attributes = {})
-      unless attributes.respond_to?(:each_pair)
-        raise ArgumentError, "attributes must be a hash-like object"
-      end
-
-      @raw = immutable_copy(attributes)
-      @attributes = transform_hash(@raw).freeze
+    def initialize(attributes)
+      @original_response = immutable_copy(attributes)
+      super(to_ostruct(@original_response))
     end
 
-    def [](key)
-      attributes[normalize_key(key)]
+    def to_hash
+      ostruct_to_hash(self)
     end
 
-    def method_missing(name, *arguments, &block)
-      if arguments.empty? && block.nil? && attributes.key?(name)
-        attributes.fetch(name)
-      else
-        super
-      end
-    end
+    alias_method :to_h, :to_hash
 
-    def respond_to_missing?(name, include_private = false)
-      attributes.key?(name) || super
+    def raw
+      @original_response
     end
 
     private
 
-    attr_reader :attributes
-
-    def transform_hash(hash)
-      hash.each_pair.with_object({}) do |(key, value), transformed|
-        transformed[normalize_key(key)] = transform_value(value)
-      end
-    end
-
-    def transform_value(value)
-      case value
+    def to_ostruct(object)
+      case object
       when Hash
-        self.class.new(value)
+        OpenStruct.new(
+          object.transform_keys { |key| key.to_s.underscore }
+            .transform_values { |value| to_ostruct(value) }
+        )
       when Array
-        value.map { |entry| transform_value(entry) }.freeze
+        object.map { |value| to_ostruct(value) }
       else
-        value
+        object
       end
-    end
-
-    def normalize_key(key)
-      ActiveSupport::Inflector.underscore(key.to_s).to_sym
     end
 
     def immutable_copy(value)
@@ -66,14 +47,32 @@ module ExportoAPI
       when Array
         value.map { |entry| immutable_copy(entry) }
       else
-        begin
-          value.dup
-        rescue TypeError
-          value
-        end
+        duplicate(value)
       end
 
       copy.freeze
+    end
+
+    def duplicate(value)
+      value.dup
+    rescue TypeError
+      value
+    end
+
+    def ostruct_to_hash(object)
+      case object
+      when OpenStruct
+        object.each_pair.to_h
+          .transform_keys(&:to_s)
+          .transform_values { |value| ostruct_to_hash(value) }
+      when Array
+        object.map { |value| ostruct_to_hash(value) }
+      when Hash
+        object.transform_keys(&:to_s)
+          .transform_values { |value| ostruct_to_hash(value) }
+      else
+        object
+      end
     end
   end
 end

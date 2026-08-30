@@ -1,5 +1,11 @@
 /.bundle/
-/Gemfile.lock
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
 /pkg/
-/*.gem
-/.coverage/
+/spec/reports/
+/tmp/
+*.gem
+Gemfile.lock
+.env

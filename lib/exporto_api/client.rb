@@ -4,27 +4,29 @@ require "faraday"
 
 module ExportoAPI
   class Client
-    attr_reader :base_url, :configuration, :connection, :environment
+    LIVE_BASE_URL = "https://api.exporto.de/v1/"
+    TEST_BASE_URL = "https://staging.api.exporto.de/v1/"
 
-    def initialize(sandbox: false, configuration: ExportoAPI.configuration, adapter: Faraday.default_adapter)
-      @environment = sandbox ? :sandbox : :live
-      @configuration = configuration
-      @base_url = configuration.base_url_for(sandbox: sandbox).dup.freeze
-      @connection = build_connection(adapter)
+    attr_reader :adapter
+
+    def initialize(sandbox: false, adapter: Faraday.default_adapter)
+      @sandbox = sandbox
+      @adapter = adapter
     end
 
-    def sandbox?
-      environment == :sandbox
+    def connection
+      @connection ||= Faraday.new do |connection|
+        connection.url_prefix = sandbox? ? TEST_BASE_URL : LIVE_BASE_URL
+        connection.request :json
+        connection.response :json, content_type: /\bjson/
+        connection.adapter adapter
+      end
     end
 
     private
 
-    def build_connection(adapter)
-      Faraday.new(url: base_url) do |connection|
-        connection.request :json
-        connection.response :json
-        connection.adapter(*Array(adapter))
-      end
+    def sandbox?
+      @sandbox
     end
   end
 end

@@ -13,5 +13,6 @@ jobs:
         with:
           ruby-version: "3.3.9"
           bundler-cache: true
-      - run: bundle exec rake test
+      - run: bundle exec rake
+      - run: bundle exec ruby -Ilib -e 'require "exporto_api"; abort "Rails loaded" if defined?(Rails); abort "Zeitwerk loaded" if defined?(Zeitwerk)'
       - run: gem build exporto_api.gemspec

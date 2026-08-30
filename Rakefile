@@ -1,12 +1,9 @@
 # frozen_string_literal: true
 
 require "bundler/gem_tasks"
-require "rake/testtask"
+require "rspec/core/rake_task"
+require "standard/rake"
 
-Rake::TestTask.new do |task|
-  task.libs << "lib"
-  task.libs << "test"
-  task.pattern = "test/**/*_test.rb"
-end
+RSpec::Core::RakeTask.new(:spec)
 
-task default: :test
+task default: %i[spec standard]
