@@ -3,7 +3,7 @@
 require_relative "exporto_api/version"
 
 module ExportoAPI
-  autoload :Auth, "exporto_api/auth"
+  autoload :AuthClient, "exporto_api/auth_client"
   autoload :Client, "exporto_api/client"
   autoload :Base, "exporto_api/object"
   autoload :Resource, "exporto_api/resource"
@@ -16,6 +16,7 @@ module ExportoAPI
   autoload :ServerError, "exporto_api/errors"
   autoload :TimeoutError, "exporto_api/errors"
   autoload :ConnectionError, "exporto_api/errors"
+  autoload :AuthResource, "exporto_api/resources/auth_resource"
 
   module Objects
     autoload :TokenResponse, "exporto_api/objects/token_response"

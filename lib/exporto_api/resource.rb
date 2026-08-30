@@ -13,19 +13,15 @@ module ExportoAPI
     private
 
     def get_request(path, params: {}, headers: {})
-      handle_response(connection.get(path, params, headers))
+      handle_response(client.connection.get(path, params, headers))
     rescue Faraday::Error => error
       raise_transport_error(error)
     end
 
     def post_request(path, body:, headers: {})
-      handle_response(connection.post(path, body, headers))
+      handle_response(client.connection.post(path, body, headers))
     rescue Faraday::Error => error
       raise_transport_error(error)
-    end
-
-    def connection
-      client.connection
     end
 
     def handle_response(response)
