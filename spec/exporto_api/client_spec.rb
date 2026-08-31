@@ -8,6 +8,21 @@ RSpec.describe ExportoAPI::Client do
   let(:access_token) { "access-token" }
   let(:sandbox) { false }
 
+  describe "resources" do
+    {
+      label_method: ExportoAPI::LabelMethodResource,
+      shipment: ExportoAPI::ShipmentResource
+    }.each do |name, resource_class|
+      it "exposes and memoizes #{name}" do
+        resource = client.public_send(name)
+
+        expect(resource).to be_a(resource_class)
+        expect(resource.client).to be(client)
+        expect(client.public_send(name)).to be(resource)
+      end
+    end
+  end
+
   describe "#connection" do
     it "uses the live base URL by default" do
       expect(client.connection.url_prefix.to_s).to eq(described_class::LIVE_BASE_URL)

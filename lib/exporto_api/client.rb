@@ -15,6 +15,14 @@ module ExportoAPI
       @adapter = adapter
     end
 
+    def label_method
+      @label_method ||= LabelMethodResource.new(self)
+    end
+
+    def shipment
+      @shipment ||= ShipmentResource.new(self)
+    end
+
     def connection
       @connection ||= Faraday.new do |connection|
         connection.url_prefix = sandbox? ? TEST_BASE_URL : LIVE_BASE_URL
