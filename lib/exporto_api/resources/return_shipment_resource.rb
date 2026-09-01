@@ -16,7 +16,9 @@ module ExportoAPI
       }.compact
 
       post_request("order/return-shipment", body: body)
-      true
+
+      # Exporto returns no response body for a successful return-shipment registration.
+      Objects::ReturnShipmentResponse.new(success: true)
     end
   end
 end

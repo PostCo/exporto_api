@@ -30,16 +30,18 @@ label = client.label.create(
   }
 )
 
-client.return_shipment.create(
+registration = client.return_shipment.create(
   order_id: "exporto-order-123",
   shipment_id: "return-shipment-123",
   foreign_inbound_tracking_id: label.tracking_code
 )
+
+registration.success # => true
 ```
 
 `methodId` is account-specific and determines the carrier and shipment direction. For an inbound label, `address` is the return sender's address.
 
-Return-shipment registration maps its Ruby keyword arguments to Exporto's request body for `POST /order/return-shipment`. Provide exactly one of `order_id` or `customer_facing_id`, together with `shipment_id` and `foreign_inbound_tracking_id`. It returns `true` for a successful `2xx` response; unsuccessful responses raise the corresponding `ExportoAPI` error.
+Return-shipment registration maps its Ruby keyword arguments to Exporto's request body for `POST /order/return-shipment`. Provide exactly one of `order_id` or `customer_facing_id`, together with `shipment_id` and `foreign_inbound_tracking_id`. Because Exporto returns no response body for this operation, a successful `2xx` response returns an `ExportoAPI::Objects::ReturnShipmentResponse` with `success: true`; unsuccessful responses raise the corresponding `ExportoAPI` error.
 
 ## Development
 

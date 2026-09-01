@@ -23,6 +23,7 @@ module ExportoAPI
   module Objects
     autoload :LabelResponse, "exporto_api/objects/label_response"
     autoload :LabelMethodResponse, "exporto_api/objects/label_method_response"
+    autoload :ReturnShipmentResponse, "exporto_api/objects/return_shipment_response"
     autoload :ShipmentResponse, "exporto_api/objects/shipment_response"
     autoload :TokenResponse, "exporto_api/objects/token_response"
   end

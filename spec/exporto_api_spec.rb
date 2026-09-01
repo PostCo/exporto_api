@@ -28,6 +28,7 @@ RSpec.describe ExportoAPI do
     expect(described_class::Objects).to be_a(Module)
     expect(described_class::Objects::LabelResponse).to be < described_class::Base
     expect(described_class::Objects::LabelMethodResponse).to be < described_class::Base
+    expect(described_class::Objects::ReturnShipmentResponse).to be < described_class::Base
     expect(described_class::Objects::ShipmentResponse).to be < described_class::Base
     expect(described_class::Objects::TokenResponse).to be < described_class::Base
   end
@@ -48,6 +49,7 @@ RSpec.describe ExportoAPI do
       ExportoAPI::ShipmentResource
       ExportoAPI::Objects::LabelResponse
       ExportoAPI::Objects::LabelMethodResponse
+      ExportoAPI::Objects::ReturnShipmentResponse
       ExportoAPI::Objects::ShipmentResponse
       abort "Rails loaded" if defined?(Rails)
       abort "Zeitwerk loaded" if defined?(Zeitwerk)

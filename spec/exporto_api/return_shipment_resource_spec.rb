@@ -64,12 +64,15 @@ RSpec.describe ExportoAPI::ReturnShipmentResource do
       204 => "",
       299 => "unexpected success body"
     }.each do |status, body|
-      it "returns true for HTTP #{status} and ignores its response body" do
+      it "returns a synthetic response object for HTTP #{status} and ignores its response body" do
         request = stub_return_shipment_request.to_return(status: status, body: body)
 
         result = create_return_shipment
 
-        expect(result).to be(true)
+        expect(result).to be_a(ExportoAPI::Objects::ReturnShipmentResponse)
+        expect(result.success).to be(true)
+        expect(result.raw).to eq(success: true)
+        expect(result.raw).to be_frozen
         expect(request).to have_been_requested.once
       end
     end
