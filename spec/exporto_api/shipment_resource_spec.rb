@@ -10,7 +10,7 @@ RSpec.describe ExportoAPI::ShipmentResource do
 
   describe "#search" do
     it "maps all supported keywords to Exporto query keys without coercion" do
-      request = stub_request(:get, endpoint("shipment"))
+      request = stub_request(:get, endpoint("shipment/search"))
         .with(
           query: {
             "foreignOutboundTrackingId" => "outbound-123",
@@ -20,7 +20,7 @@ RSpec.describe ExportoAPI::ShipmentResource do
             "carrierDeliveredAtUpdatedAt" => "2026-08-31T11:00:00Z",
             "page" => "2",
             "pageSize" => "50",
-            "type" => "RETURN"
+            "type" => "inbound"
           }
         )
         .to_return(status: 200, body: JSON.generate([]))
@@ -33,14 +33,14 @@ RSpec.describe ExportoAPI::ShipmentResource do
         carrier_delivered_at_updated_at: "2026-08-31T11:00:00Z",
         page: 2,
         page_size: 50,
-        type: "RETURN"
+        type: "inbound"
       )
 
       expect(request).to have_been_requested.once
     end
 
     it "omits nil values while preserving page zero" do
-      request = stub_request(:get, endpoint("shipment"))
+      request = stub_request(:get, endpoint("shipment/search"))
         .with(query: {"foreignOutboundTrackingId" => "outbound-123", "page" => "0"})
         .to_return(status: 200, body: JSON.generate([]))
 
@@ -50,7 +50,7 @@ RSpec.describe ExportoAPI::ShipmentResource do
     end
 
     it "returns an empty array for no results" do
-      stub_request(:get, endpoint("shipment"))
+      stub_request(:get, endpoint("shipment/search"))
         .to_return(status: 200, body: JSON.generate([]))
 
       expect(shipment.search).to eq([])
@@ -61,15 +61,15 @@ RSpec.describe ExportoAPI::ShipmentResource do
         {
           "shipmentId" => "shipment-123",
           "foreignOutboundTrackingId" => "outbound-123",
-          "recipientAddress" => {"firstName" => "Ada"}
+          "lineItems" => [{"articleId" => "article-123"}]
         },
         {
           "shipmentId" => "shipment-456",
           "foreignInboundTrackingId" => "inbound-456",
-          "recipientAddress" => {"firstName" => "Grace"}
+          "lineItems" => [{"articleId" => "article-456"}]
         }
       ]
-      stub_request(:get, endpoint("shipment"))
+      stub_request(:get, endpoint("shipment/search"))
         .with(query: {"foreignOutboundTrackingId" => "outbound-123"})
         .to_return(status: 200, body: JSON.generate(response))
 
@@ -80,13 +80,14 @@ RSpec.describe ExportoAPI::ShipmentResource do
         ExportoAPI::Objects::ShipmentResponse
       ])
       expect(shipments.map(&:shipment_id)).to eq(["shipment-123", "shipment-456"])
-      expect(shipments.map { |result| result.recipient_address.first_name }).to eq(["Ada", "Grace"])
+      expect(shipments.map { |result| result.line_items.first.article_id })
+        .to eq(["article-123", "article-456"])
       expect(shipments.map(&:raw)).to eq(response)
       expect(shipments.map(&:raw)).to all(be_frozen)
     end
 
     it "propagates provider validation failures" do
-      stub_request(:get, endpoint("shipment"))
+      stub_request(:get, endpoint("shipment/search"))
         .to_return(
           status: 400,
           body: JSON.generate("message" => "A search selector is required"),
@@ -97,7 +98,7 @@ RSpec.describe ExportoAPI::ShipmentResource do
     end
 
     it "propagates transport failures through APIError" do
-      stub_request(:get, endpoint("shipment"))
+      stub_request(:get, endpoint("shipment/search"))
         .to_raise(Faraday::ConnectionFailed.new("socket closed"))
 
       expect { shipment.search }
@@ -109,13 +110,13 @@ RSpec.describe ExportoAPI::ShipmentResource do
   end
 
   describe "#find" do
-    it "retrieves the exact shipment and maps nested response data" do
+    it "retrieves the exact shipment and maps its response data" do
       response = {
-        "GetShipmentEntity" => {
-          "shipmentId" => "shipment-123",
-          "recipientAddress" => {"firstName" => "Ada"},
-          "parcelItems" => [{"productSKU" => "SKU-1"}]
-        }
+        "status" => "processed",
+        "shipmentId" => "shipment-123",
+        "orderId" => "order-123",
+        "type" => "outbound",
+        "lineItems" => [{"articleId" => "article-123"}]
       }
       request = stub_request(:get, endpoint("shipment/shipment-123"))
         .to_return(status: 200, body: JSON.generate(response))
@@ -124,9 +125,9 @@ RSpec.describe ExportoAPI::ShipmentResource do
 
       expect(request).to have_been_requested.once
       expect(result).to be_a(ExportoAPI::Objects::ShipmentResponse)
-      expect(result.get_shipment_entity.shipment_id).to eq("shipment-123")
-      expect(result.get_shipment_entity.recipient_address.first_name).to eq("Ada")
-      expect(result.get_shipment_entity.parcel_items.first.product_sku).to eq("SKU-1")
+      expect(result.shipment_id).to eq("shipment-123")
+      expect(result.order_id).to eq("order-123")
+      expect(result.line_items.first.article_id).to eq("article-123")
       expect(result.raw).to eq(response)
       expect(result.raw).to be_frozen
     end

@@ -23,7 +23,7 @@ module ExportoAPI
         "type" => type
       }.compact
 
-      get_request("shipment", params: params).map do |attributes|
+      get_request("shipment/search", params: params).map do |attributes|
         Objects::ShipmentResponse.new(attributes)
       end
     end
