@@ -38,8 +38,8 @@ module ExportoAPI
       @label ||= LabelResource.new(self)
     end
 
-    def order
-      @order ||= OrderResource.new(self)
+    def return_shipment
+      @return_shipment ||= ReturnShipmentResource.new(self)
     end
 
     private

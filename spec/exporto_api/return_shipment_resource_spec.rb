@@ -2,8 +2,8 @@
 
 require "json"
 
-RSpec.describe ExportoAPI::OrderResource do
-  subject(:resource) { client.order }
+RSpec.describe ExportoAPI::ReturnShipmentResource do
+  subject(:resource) { client.return_shipment }
 
   let(:access_token) { "order-access-token" }
   let(:client) { ExportoAPI::Client.new(access_token: access_token, sandbox: true) }
@@ -15,7 +15,7 @@ RSpec.describe ExportoAPI::OrderResource do
     }
   end
 
-  describe "#create_return_shipment" do
+  describe "#create" do
     it "posts the exact provider payload once to the body-referenced route" do
       request = stub_request(:post, endpoint("order/return-shipment"))
         .with(
@@ -28,7 +28,7 @@ RSpec.describe ExportoAPI::OrderResource do
         )
         .to_return(status: 201, body: "")
 
-      resource.create_return_shipment(payload)
+      resource.create(payload)
 
       expect(request).to have_been_requested.once
     end
@@ -38,7 +38,7 @@ RSpec.describe ExportoAPI::OrderResource do
       payload["customerFacingId"] = "customer-order-123"
       request = stub_return_shipment_request.to_return(status: 201, body: "")
 
-      resource.create_return_shipment(payload)
+      resource.create(payload)
 
       expect(request).to have_been_requested.once
     end
@@ -52,7 +52,7 @@ RSpec.describe ExportoAPI::OrderResource do
       it "returns true for HTTP #{status} and ignores its response body" do
         request = stub_return_shipment_request.to_return(status: status, body: body)
 
-        result = resource.create_return_shipment(payload)
+        result = resource.create(payload)
 
         expect(result).to be(true)
         expect(request).to have_been_requested.once
@@ -72,7 +72,7 @@ RSpec.describe ExportoAPI::OrderResource do
         )
 
         expect do
-          resource.create_return_shipment(payload)
+          resource.create(payload)
         end.to raise_error(error_class) do |error|
           expect(error.status_code).to eq(status)
         end
@@ -85,7 +85,7 @@ RSpec.describe ExportoAPI::OrderResource do
         .to_raise(Faraday::TimeoutError.new("execution expired"))
 
       expect do
-        resource.create_return_shipment(payload)
+        resource.create(payload)
       end.to raise_error(ExportoAPI::APIError) do |error|
         expect(error.message).to eq("Network request failed")
         expect(error.cause).to be_a(Faraday::TimeoutError)

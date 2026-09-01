@@ -30,7 +30,7 @@ label = client.label.create(
   }
 )
 
-client.order.create_return_shipment(
+client.return_shipment.create(
   "orderId" => "exporto-order-123",
   "shipmentId" => "return-shipment-123",
   "foreignInboundTrackingId" => label.tracking_code

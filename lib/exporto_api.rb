@@ -17,7 +17,7 @@ module ExportoAPI
   autoload :AuthResource, "exporto_api/resources/auth_resource"
   autoload :LabelResource, "exporto_api/resources/label_resource"
   autoload :LabelMethodResource, "exporto_api/resources/label_method_resource"
-  autoload :OrderResource, "exporto_api/resources/order_resource"
+  autoload :ReturnShipmentResource, "exporto_api/resources/return_shipment_resource"
   autoload :ShipmentResource, "exporto_api/resources/shipment_resource"
 
   module Objects

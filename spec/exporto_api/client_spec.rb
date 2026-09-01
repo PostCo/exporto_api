@@ -105,9 +105,9 @@ RSpec.describe ExportoAPI::Client do
       expect(client.label).to be(client.label)
     end
 
-    it "returns and memoizes the order resource" do
-      expect(client.order).to be_a(ExportoAPI::OrderResource)
-      expect(client.order).to be(client.order)
+    it "returns and memoizes the return shipment resource" do
+      expect(client.return_shipment).to be_a(ExportoAPI::ReturnShipmentResource)
+      expect(client.return_shipment).to be(client.return_shipment)
     end
   end
 end

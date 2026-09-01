@@ -23,7 +23,7 @@ RSpec.describe ExportoAPI do
     expect(described_class::AuthResource).to be < described_class::Resource
     expect(described_class::LabelResource).to be < described_class::Resource
     expect(described_class::LabelMethodResource).to be < described_class::Resource
-    expect(described_class::OrderResource).to be < described_class::Resource
+    expect(described_class::ReturnShipmentResource).to be < described_class::Resource
     expect(described_class::ShipmentResource).to be < described_class::Resource
     expect(described_class::Objects).to be_a(Module)
     expect(described_class::Objects::LabelResponse).to be < described_class::Base
@@ -44,7 +44,7 @@ RSpec.describe ExportoAPI do
       require "exporto_api"
       ExportoAPI::LabelResource
       ExportoAPI::LabelMethodResource
-      ExportoAPI::OrderResource
+      ExportoAPI::ReturnShipmentResource
       ExportoAPI::ShipmentResource
       ExportoAPI::Objects::LabelResponse
       ExportoAPI::Objects::LabelMethodResponse
