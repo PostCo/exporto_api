@@ -2,8 +2,8 @@
 
 module ExportoAPI
   class OrderResource < Resource
-    def create_return_shipment(order_id:, payload:)
-      post_request("order/#{order_id}/return-shipment", body: payload)
+    def create_return_shipment(payload)
+      post_request("order/return-shipment", body: payload)
       true
     end
   end
