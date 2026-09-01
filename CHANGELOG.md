@@ -2,9 +2,20 @@
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-01
+
 ### Added
 
-- Initial `0.1.0` scaffold with live and staging clients, shared HTTP behavior, and response objects.
-- OAuth client-credentials authentication, Bearer-authenticated API requests, and typed API errors.
-- Label-method discovery and shipment search and retrieval resources.
-- Label creation and return-shipment registration resources.
+- Rails-independent live and staging clients with injectable Faraday adapters.
+- OAuth client-credentials authentication and Bearer-authenticated API requests.
+- Snake-case response objects with deeply frozen access to the original provider response.
+- Typed authentication, validation, not-found, rate-limit, server, and transport errors with safe metadata.
+- Label-method discovery through `client.label_method.all`.
+- Shipment search and retrieval through `client.shipment.search` and `client.shipment.find`.
+- Label creation through `client.label.create` without automatic mutation retries.
+- Return-shipment registration through `client.return_shipment.create`, returning a typed success response for every `2xx` response.
+
+### Out of scope
+
+- Token caching, expiry buffers, refresh, and concurrency policy remain caller responsibilities.
+- Shipment deletion and carrier-label cancellation are not part of the initial public API.
