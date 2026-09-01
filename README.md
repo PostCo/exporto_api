@@ -1,25 +1,27 @@
-# exporto_api
+# ExportoAPI
 
 Rails-independent Ruby client for the Exporto API.
 
 ## Installation
 
-Add the tagged release to your Gemfile:
+Add to your Gemfile:
 
 ```ruby
-gem "exporto_api", github: "PostCo/exporto_api", tag: "v0.1.0"
+gem "exporto_api", git: "https://github.com/PostCo/exporto_api", tag: "v0.1.0"
 ```
 
 Then run `bundle install`.
 
-## Authentication and environments
+## Usage
 
-Live is the default environment. Pass `sandbox: true` to use Exporto's staging API. The authentication and API clients must always receive the same `sandbox:` value so a token is used only in the environment that issued it.
+### Initialize clients
+
+Exporto uses a separate OAuth client to issue an access token. Set the environment once and pass the same `sandbox:` value to both clients so the token is used only in the environment that issued it.
 
 ```ruby
 require "exporto_api"
 
-sandbox = true
+sandbox = true # Use Exporto's staging environment
 
 auth_client = ExportoAPI::AuthClient.new(
   username: "EXPORTO_USERNAME",
@@ -38,8 +40,6 @@ client = ExportoAPI::Client.new(
 `AuthClient#token` also accepts an optional space-delimited `scope:` string. Its response exposes `access_token`, `token_type`, `expires_in`, and `scope`.
 
 The gem does not cache or refresh tokens. The caller owns token caching by Exporto account, environment, and requested scope, using the returned `expires_in` value and an application-defined safety buffer.
-
-## Resource operations
 
 ### List label methods
 
@@ -125,7 +125,7 @@ Return-shipment registration maps its Ruby keyword arguments to Exporto's reques
 
 The gem does not automatically retry mutating requests. The caller owns idempotency, persistence, retry, and reconciliation policy.
 
-## Responses
+### Response objects
 
 Response objects expose Exporto's camel-case keys through snake-case Ruby methods, including nested hashes and arrays. The original provider response remains available as a deeply frozen snapshot through `raw`.
 
@@ -136,18 +136,44 @@ shipment.raw
 shipment.raw.frozen? # => true
 ```
 
-## Errors
+### Error handling
 
 HTTP failures raise typed subclasses of `ExportoAPI::Error`:
 
-- `ExportoAPI::AuthenticationError`
-- `ExportoAPI::ValidationError`
-- `ExportoAPI::NotFoundError`
-- `ExportoAPI::RateLimitError`
-- `ExportoAPI::ServerError`
-- `ExportoAPI::APIError` for other HTTP and transport failures
+```ruby
+begin
+  client.shipment.find(shipment_id: "EXPORTO-SHIPMENT-ID")
+rescue ExportoAPI::AuthenticationError => error
+  # 401/403 responses
+  puts error.message
+rescue ExportoAPI::ValidationError => error
+  # 400 responses
+  puts error.message
+rescue ExportoAPI::NotFoundError => error
+  # 404 responses
+  puts error.message
+rescue ExportoAPI::RateLimitError => error
+  # 429 responses
+  puts error.retry_after
+rescue ExportoAPI::ServerError => error
+  # 500-599 responses
+  puts error.message
+rescue ExportoAPI::APIError => error
+  # Other HTTP and transport failures
+  puts error.message
+end
+```
 
 Errors retain safe metadata where available through `status_code`, `request_id`, and `retry_after`. Transport failures retain the original Faraday exception as their cause.
+
+### Sandbox mode
+
+Both clients use Exporto's live environment by default. Set `sandbox: true` for staging, and always use the same value for token creation and authenticated requests:
+
+```ruby
+sandbox = false # Live: https://api.exporto.de/v1/
+# sandbox = true # Staging: https://staging.api.exporto.de/v1/
+```
 
 ## Development
 
@@ -157,3 +183,7 @@ bundle exec rspec
 bundle exec standardrb
 gem build exporto_api.gemspec
 ```
+
+## License
+
+MIT License. See [LICENSE.txt](LICENSE.txt).
