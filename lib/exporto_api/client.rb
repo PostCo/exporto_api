@@ -34,6 +34,14 @@ module ExportoAPI
       end
     end
 
+    def label
+      @label ||= LabelResource.new(self)
+    end
+
+    def return_shipment
+      @return_shipment ||= ReturnShipmentResource.new(self)
+    end
+
     private
 
     def sandbox?

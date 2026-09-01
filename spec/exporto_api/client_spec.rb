@@ -98,4 +98,16 @@ RSpec.describe ExportoAPI::Client do
       expect(client.connection.builder.adapter.klass).to eq(Faraday::Adapter::Test)
     end
   end
+
+  describe "resource accessors" do
+    it "returns and memoizes the label resource" do
+      expect(client.label).to be_a(ExportoAPI::LabelResource)
+      expect(client.label).to be(client.label)
+    end
+
+    it "returns and memoizes the return shipment resource" do
+      expect(client.return_shipment).to be_a(ExportoAPI::ReturnShipmentResource)
+      expect(client.return_shipment).to be(client.return_shipment)
+    end
+  end
 end
