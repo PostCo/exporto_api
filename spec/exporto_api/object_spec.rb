@@ -3,6 +3,32 @@
 require "json"
 
 RSpec.describe ExportoAPI::Base do
+  describe ".new" do
+    it "maps a top-level array into response objects" do
+      response = [
+        {"methodId" => 685},
+        {"methodId" => 686}
+      ]
+
+      result = described_class.new(response)
+
+      expect(result).to be_an(Array)
+      expect(result.map(&:class)).to eq([described_class, described_class])
+      expect(result.map(&:method_id)).to eq([685, 686])
+      expect(result.map(&:raw)).to eq(response)
+    end
+
+    it "maps a top-level hash into one response object" do
+      response = {"shipmentId" => "shipment-123"}
+
+      result = described_class.new(response)
+
+      expect(result).to be_a(described_class)
+      expect(result.shipment_id).to eq("shipment-123")
+      expect(result.raw).to eq(response)
+    end
+  end
+
   describe "response access" do
     it "recursively exposes snake-case methods for hashes and arrays" do
       object = described_class.new(

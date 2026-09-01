@@ -21,7 +21,11 @@ RSpec.describe ExportoAPI do
     expect(described_class::RateLimitError).to be < described_class::Error
     expect(described_class::ServerError).to be < described_class::Error
     expect(described_class::AuthResource).to be < described_class::Resource
+    expect(described_class::LabelMethodResource).to be < described_class::Resource
+    expect(described_class::ShipmentResource).to be < described_class::Resource
     expect(described_class::Objects).to be_a(Module)
+    expect(described_class::Objects::LabelMethodResponse).to be < described_class::Base
+    expect(described_class::Objects::ShipmentResponse).to be < described_class::Base
     expect(described_class::Objects::TokenResponse).to be < described_class::Base
   end
 

@@ -7,6 +7,12 @@ module ExportoAPI
   class Base < OpenStruct
     attr_reader :original_response
 
+    def self.new(attributes)
+      return attributes.map { |item| super(item) } if attributes.is_a?(Array)
+
+      super
+    end
+
     def initialize(attributes)
       @original_response = deep_freeze(attributes)
       super(to_ostruct(attributes))
