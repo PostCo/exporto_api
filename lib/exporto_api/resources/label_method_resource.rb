@@ -3,9 +3,7 @@
 module ExportoAPI
   class LabelMethodResource < Resource
     def all
-      get_request("label/methods").map do |attributes|
-        Objects::LabelMethodResponse.new(attributes)
-      end
+      Objects::LabelMethodResponse.from_response(get_request("label/methods"))
     end
   end
 end
