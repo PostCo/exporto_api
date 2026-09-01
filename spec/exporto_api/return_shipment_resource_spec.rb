@@ -7,16 +7,26 @@ RSpec.describe ExportoAPI::ReturnShipmentResource do
 
   let(:access_token) { "order-access-token" }
   let(:client) { ExportoAPI::Client.new(access_token: access_token, sandbox: true) }
+  let(:order_id) { "exporto-order-123" }
+  let(:shipment_id) { "return-shipment-123" }
+  let(:foreign_inbound_tracking_id) { "TRACK-INBOUND-123" }
+  let(:create_params) do
+    {
+      order_id: order_id,
+      shipment_id: shipment_id,
+      foreign_inbound_tracking_id: foreign_inbound_tracking_id
+    }
+  end
   let(:payload) do
     {
-      "orderId" => "exporto-order-123",
-      "shipmentId" => "return-shipment-123",
-      "foreignInboundTrackingId" => "TRACK-INBOUND-123"
+      "orderId" => order_id,
+      "shipmentId" => shipment_id,
+      "foreignInboundTrackingId" => foreign_inbound_tracking_id
     }
   end
 
   describe "#create" do
-    it "posts the exact provider payload once to the body-referenced route" do
+    it "maps Ruby keyword arguments to the exact provider payload" do
       request = stub_request(:post, endpoint("order/return-shipment"))
         .with(
           body: JSON.generate(payload),
@@ -28,17 +38,22 @@ RSpec.describe ExportoAPI::ReturnShipmentResource do
         )
         .to_return(status: 201, body: "")
 
-      resource.create(payload)
+      create_return_shipment
 
       expect(request).to have_been_requested.once
     end
 
-    it "passes a customer-facing order reference through unchanged" do
-      payload.delete("orderId")
-      payload["customerFacingId"] = "customer-order-123"
-      request = stub_return_shipment_request.to_return(status: 201, body: "")
+    it "maps a customer-facing order reference and omits the unused order ID" do
+      customer_facing_id = "customer-order-123"
+      customer_payload = {
+        "customerFacingId" => customer_facing_id,
+        "shipmentId" => shipment_id,
+        "foreignInboundTrackingId" => foreign_inbound_tracking_id
+      }
+      request = stub_return_shipment_request(customer_payload)
+        .to_return(status: 201, body: "")
 
-      resource.create(payload)
+      create_return_shipment(order_id: nil, customer_facing_id: customer_facing_id)
 
       expect(request).to have_been_requested.once
     end
@@ -52,7 +67,7 @@ RSpec.describe ExportoAPI::ReturnShipmentResource do
       it "returns true for HTTP #{status} and ignores its response body" do
         request = stub_return_shipment_request.to_return(status: status, body: body)
 
-        result = resource.create(payload)
+        result = create_return_shipment
 
         expect(result).to be(true)
         expect(request).to have_been_requested.once
@@ -72,7 +87,7 @@ RSpec.describe ExportoAPI::ReturnShipmentResource do
         )
 
         expect do
-          resource.create(payload)
+          create_return_shipment
         end.to raise_error(error_class) do |error|
           expect(error.status_code).to eq(status)
         end
@@ -85,7 +100,7 @@ RSpec.describe ExportoAPI::ReturnShipmentResource do
         .to_raise(Faraday::TimeoutError.new("execution expired"))
 
       expect do
-        resource.create(payload)
+        create_return_shipment
       end.to raise_error(ExportoAPI::APIError) do |error|
         expect(error.message).to eq("Network request failed")
         expect(error.cause).to be_a(Faraday::TimeoutError)
@@ -98,8 +113,12 @@ RSpec.describe ExportoAPI::ReturnShipmentResource do
     "#{ExportoAPI::Client::TEST_BASE_URL}#{path}"
   end
 
-  def stub_return_shipment_request
+  def create_return_shipment(**overrides)
+    resource.create(**create_params.merge(overrides))
+  end
+
+  def stub_return_shipment_request(expected_payload = payload)
     stub_request(:post, endpoint("order/return-shipment"))
-      .with(body: JSON.generate(payload))
+      .with(body: JSON.generate(expected_payload))
   end
 end
