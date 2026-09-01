@@ -3,8 +3,9 @@
 require "json"
 
 RSpec.describe ExportoAPI::Client do
-  subject(:client) { described_class.new(sandbox: sandbox) }
+  subject(:client) { described_class.new(access_token: access_token, sandbox: sandbox) }
 
+  let(:access_token) { "access-token" }
   let(:sandbox) { false }
 
   describe "#connection" do
@@ -48,6 +49,27 @@ RSpec.describe ExportoAPI::Client do
 
       expect(response.body).to eq("shipmentId" => 123)
     end
+
+    it "sends the access token using Bearer authentication" do
+      request = stub_request(:get, "#{described_class::LIVE_BASE_URL}auth/test")
+        .with(
+          headers: {
+            "Accept" => "application/json",
+            "Authorization" => "Bearer #{access_token}"
+          }
+        )
+        .to_return(status: 200, body: JSON.generate("authenticated" => true))
+
+      client.connection.get("auth/test")
+
+      expect(request).to have_been_requested.once
+    end
+
+    it "does not configure logging or retry middleware" do
+      middleware = client.connection.builder.handlers.map { |handler| handler.klass.name }
+
+      expect(middleware).not_to include("Faraday::Response::Logger", "Faraday::Retry::Middleware")
+    end
   end
 
   describe "adapter injection" do
@@ -56,7 +78,7 @@ RSpec.describe ExportoAPI::Client do
     end
 
     it "configures an injected adapter" do
-      client = described_class.new(adapter: :test)
+      client = described_class.new(access_token: access_token, adapter: :test)
 
       expect(client.connection.builder.adapter.klass).to eq(Faraday::Adapter::Test)
     end

@@ -9,11 +9,20 @@ RSpec.describe ExportoAPI do
   end
 
   it "autoloads the Torque-style public constants" do
+    expect(described_class::AuthClient).to be_a(Class)
     expect(described_class::Client).to be_a(Class)
     expect(described_class::Resource).to be_a(Class)
     expect(described_class::Base).to be_a(Class)
     expect(described_class::Error).to be < StandardError
+    expect(described_class::APIError).to be < described_class::Error
+    expect(described_class::AuthenticationError).to be < described_class::Error
+    expect(described_class::ValidationError).to be < described_class::Error
+    expect(described_class::NotFoundError).to be < described_class::Error
+    expect(described_class::RateLimitError).to be < described_class::Error
+    expect(described_class::ServerError).to be < described_class::Error
+    expect(described_class::AuthResource).to be < described_class::Resource
     expect(described_class::Objects).to be_a(Module)
+    expect(described_class::Objects::TokenResponse).to be < described_class::Base
   end
 
   it "does not expose the unreleased configuration and object APIs" do

@@ -28,8 +28,15 @@ module ExportoAPI
       body = parse_body(response.body)
       return body if response.status.between?(200, 299)
 
-      message = "API error (HTTP #{response.status}): #{extract_error_message(body)}"
-      raise Error.new(message, response: response, status_code: response.status)
+      error_class, prefix = error_mapping(response.status)
+      message = "#{prefix} (HTTP #{response.status}): #{extract_error_message(body)}"
+      raise error_class.new(
+        message,
+        response: response,
+        status_code: response.status,
+        request_id: extract_request_id(response, body),
+        retry_after: extract_retry_after(response)
+      )
     end
 
     def parse_body(body)
@@ -42,15 +49,42 @@ module ExportoAPI
 
     def extract_error_message(body)
       case body
-      when Hash then body["message"] || body["error"] || body.to_s
+      when Hash
+        [body["message"], body[:message], body["error"], body[:error]]
+          .find { |value| value.is_a?(String) } || "Unknown error"
       when String then body
-      else body.to_s
+      else "Unknown error"
       end
     end
 
+    def error_mapping(status)
+      case status
+      when 400 then [ValidationError, "Bad request"]
+      when 401, 403 then [AuthenticationError, "Authentication failed"]
+      when 404 then [NotFoundError, "Resource not found"]
+      when 429 then [RateLimitError, "Rate limited"]
+      when 500..599 then [ServerError, "Server error"]
+      else [APIError, "API error"]
+      end
+    end
+
+    def extract_request_id(response, body)
+      response.headers["x-request-id"] || request_id_from(body)
+    end
+
+    def request_id_from(body)
+      return unless body.is_a?(Hash)
+
+      body["requestId"] || body[:requestId] || body["request_id"] || body[:request_id]
+    end
+
+    def extract_retry_after(response)
+      Integer(response.headers["retry-after"], exception: false)
+    end
+
     def raise_transport_error(error)
-      wrapped_error = Error.new(
-        "Network error: #{error.message}",
+      wrapped_error = APIError.new(
+        "Network request failed",
         response: error.response,
         status_code: error.response_status
       )
