@@ -115,7 +115,14 @@ RSpec.describe ExportoAPI::ShipmentResource do
         "status" => "processed",
         "shipmentId" => "shipment-123",
         "orderId" => "order-123",
-        "type" => "outbound",
+        "type" => "inbound",
+        "foreignOutboundTrackingId" => "outbound-123",
+        "foreignInboundTrackingId" => "inbound-123",
+        "domesticInboundTrackingId" => "domestic-inbound-123",
+        "declaredAt" => "2026-08-31T09:15:00Z",
+        "carrierState" => "delivered",
+        "carrierReceivedAt" => "2026-09-01T08:00:00Z",
+        "carrierDeliveredAt" => "2026-09-01T09:00:00Z",
         "lineItems" => [{"articleId" => "article-123"}]
       }
       request = stub_request(:get, endpoint("shipment/shipment-123"))
@@ -127,6 +134,15 @@ RSpec.describe ExportoAPI::ShipmentResource do
       expect(result).to be_a(ExportoAPI::Objects::ShipmentResponse)
       expect(result.shipment_id).to eq("shipment-123")
       expect(result.order_id).to eq("order-123")
+      expect(result.type).to eq("inbound")
+      expect(result.status).to eq("processed")
+      expect(result.declared_at).to eq("2026-08-31T09:15:00Z")
+      expect(result.carrier_state).to eq("delivered")
+      expect(result.carrier_received_at).to eq("2026-09-01T08:00:00Z")
+      expect(result.carrier_delivered_at).to eq("2026-09-01T09:00:00Z")
+      expect(result.foreign_outbound_tracking_id).to eq("outbound-123")
+      expect(result.foreign_inbound_tracking_id).to eq("inbound-123")
+      expect(result.domestic_inbound_tracking_id).to eq("domestic-inbound-123")
       expect(result.line_items.first.article_id).to eq("article-123")
       expect(result.raw).to eq(response)
       expect(result.raw).to be_frozen
