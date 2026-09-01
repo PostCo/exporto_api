@@ -23,7 +23,7 @@ module ExportoAPI
         "type" => type
       }.compact
 
-      Objects::ShipmentResponse.from_response(get_request("shipment/search", params: params))
+      Objects::ShipmentResponse.new(get_request("shipment/search", params: params))
     end
 
     def find(shipment_id:)

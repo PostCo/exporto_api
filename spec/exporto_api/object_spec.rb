@@ -3,14 +3,14 @@
 require "json"
 
 RSpec.describe ExportoAPI::Base do
-  describe ".from_response" do
+  describe ".new" do
     it "maps a top-level array into response objects" do
       response = [
         {"methodId" => 685},
         {"methodId" => 686}
       ]
 
-      result = described_class.from_response(response)
+      result = described_class.new(response)
 
       expect(result).to be_an(Array)
       expect(result.map(&:class)).to eq([described_class, described_class])
@@ -21,7 +21,7 @@ RSpec.describe ExportoAPI::Base do
     it "maps a top-level hash into one response object" do
       response = {"shipmentId" => "shipment-123"}
 
-      result = described_class.from_response(response)
+      result = described_class.new(response)
 
       expect(result).to be_a(described_class)
       expect(result.shipment_id).to eq("shipment-123")
