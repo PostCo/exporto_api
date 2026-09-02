@@ -7,3 +7,4 @@ require "standard/rake"
 RSpec::Core::RakeTask.new(:spec)
 
 task default: %i[spec standard]
+task release: %i[spec standard]
