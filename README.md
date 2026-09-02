@@ -7,7 +7,7 @@ Rails-independent Ruby client for the Exporto API.
 Add to your Gemfile:
 
 ```ruby
-gem "exporto_api", git: "https://github.com/PostCo/exporto_api", tag: "v0.1.0"
+gem "exporto_api", "~> 0.1.0"
 ```
 
 Then run `bundle install`.
