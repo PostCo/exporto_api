@@ -5,7 +5,7 @@ This project uses Bundler's built-in gem release tasks.
 ### Prerequisites
 
 - You have push access to the GitHub repo.
-- You have a RubyGems.org account with an API key configured locally (`~/.gem/credentials`).
+- You have a RubyGems.org account with an API key configured locally by running `gem signin`.
 - Your local `main` branch is up to date with `origin/main`.
 
 ### Normal release process
