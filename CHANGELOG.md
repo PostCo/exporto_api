@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-15
+
+### Added
+
+- Bounded connect and read timeouts on `Client` and `AuthClient` connections (5s / 15s by default), overridable with `open_timeout:` and `timeout:`.
+
 ## [0.1.0] - 2026-09-02
 
 ### Added

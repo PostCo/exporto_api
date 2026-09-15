@@ -6,13 +6,18 @@ module ExportoAPI
   class Client
     LIVE_BASE_URL = "https://api.exporto.de/v1/"
     TEST_BASE_URL = "https://staging.api.exporto.de/v1/"
+    DEFAULT_OPEN_TIMEOUT = 5
+    DEFAULT_TIMEOUT = 15
 
-    attr_reader :access_token, :adapter
+    attr_reader :access_token, :adapter, :open_timeout, :timeout
 
-    def initialize(access_token:, sandbox: false, adapter: Faraday.default_adapter)
+    def initialize(access_token:, sandbox: false, adapter: Faraday.default_adapter,
+      open_timeout: DEFAULT_OPEN_TIMEOUT, timeout: DEFAULT_TIMEOUT)
       @access_token = access_token
       @sandbox = sandbox
       @adapter = adapter
+      @open_timeout = open_timeout
+      @timeout = timeout
     end
 
     def label_method
@@ -26,6 +31,8 @@ module ExportoAPI
     def connection
       @connection ||= Faraday.new do |connection|
         connection.url_prefix = sandbox? ? TEST_BASE_URL : LIVE_BASE_URL
+        connection.options.open_timeout = open_timeout
+        connection.options.timeout = timeout
         connection.headers["Authorization"] = "Bearer #{access_token}"
         connection.headers["Accept"] = "application/json"
         connection.request :json

@@ -37,6 +37,11 @@ client = ExportoAPI::Client.new(
 )
 ```
 
+Both clients bound every request with a connect and read timeout, defaulting to
+`ExportoAPI::Client::DEFAULT_OPEN_TIMEOUT` (5s) and `ExportoAPI::Client::DEFAULT_TIMEOUT` (15s).
+Pass `open_timeout:` and `timeout:` to either constructor to override them; callers never need to
+reach into the Faraday connection themselves.
+
 `AuthClient#token` also accepts an optional space-delimited `scope:` string. Its response exposes `access_token`, `token_type`, `expires_in`, and `scope`.
 
 The gem does not cache or refresh tokens. The caller owns token caching by Exporto account, environment, and requested scope, using the returned `expires_in` value and an application-defined safety buffer.

@@ -31,6 +31,23 @@ RSpec.describe ExportoAPI::AuthClient do
       end
     end
 
+    it "applies bounded default timeouts" do
+      expect(auth_client.connection.options.open_timeout).to eq(ExportoAPI::Client::DEFAULT_OPEN_TIMEOUT)
+      expect(auth_client.connection.options.timeout).to eq(ExportoAPI::Client::DEFAULT_TIMEOUT)
+    end
+
+    it "allows the caller to override the timeouts" do
+      auth_client = described_class.new(
+        username: username,
+        password: password,
+        open_timeout: 1,
+        timeout: 2
+      )
+
+      expect(auth_client.connection.options.open_timeout).to eq(1)
+      expect(auth_client.connection.options.timeout).to eq(2)
+    end
+
     it "builds the connection lazily" do
       expect(auth_client.instance_variable_defined?(:@connection)).to be(false)
 
